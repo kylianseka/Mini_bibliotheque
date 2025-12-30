@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -42,7 +41,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    
+
     // Book Management
     Route::get('/books', [AdminController::class, 'books'])->name('books.index');
     Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
@@ -50,12 +49,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
     Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
     Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
-    
+
     // User Management
     Route::get('/users', [AdminController::class, 'users'])->name('users.index');
-    
+
     // Loan Management
     Route::get('/loans', [LoanController::class, 'admin'])->name('loans.index');
 });
-=======
->>>>>>> cbfee6470252eb1110a11fd4125ca2de2914ee82
