@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -56,3 +57,5 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Loan Management
     Route::get('/loans', [LoanController::class, 'admin'])->name('loans.index');
 });
+=======
+>>>>>>> cbfee6470252eb1110a11fd4125ca2de2914ee82
