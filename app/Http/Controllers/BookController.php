@@ -8,42 +8,113 @@ use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
-    // Afficher la liste des livres (API/Web)
-    public function index() {
-        return Book::all();
+    /**
+     * Display a listing of the books.
+     */
+    public function index()
+    {
+        $books = Book::orderBy('title')->paginate(12);
+        return view('books.index', compact('books'));
     }
 
-    // Créer un nouveau livre avec upload de PDF
-    public function store(Request $request) {
+    /**
+     * Show the form for creating a new book.
+     */
+    public function create()
+    {
+        return view('admin.books.create');
+    }
+
+    /**
+     * Store a newly created book in storage.
+     */
+    public function store(Request $request)
+    {
         $validated = $request->validate([
-            'title' => 'required|string',
-            'author' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'pdf_file' => 'nullable|mimes:pdf|max:10000', // 
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'isbn' => 'required|string|unique:books,isbn',
+            'published_year' => 'nullable|integer|min:1000|max:' . date('Y'),
+            'description' => 'nullable|string',
+            'cover_image' => 'nullable|image|max:2048',
+            'quantity' => 'required|integer|min:1',
         ]);
 
-        if ($request->hasFile('pdf_file')) {
-            $path = $request->file('pdf_file')->store('books_pdf', 'public');
-            $validated['pdf_path'] = $path;
+        if ($request->hasFile('cover_image')) {
+            $path = $request->file('cover_image')->store('covers', 'public');
+            $validated['cover_image'] = $path;
         }
 
-        return Book::create($validated);
+        $validated['available_quantity'] = $validated['quantity'];
+
+        Book::create($validated);
+
+        return redirect()->route('admin.books.index')
+            ->with('success', 'Le livre a été ajouté avec succès.');
     }
 
-    // Voir un livre spécifique
-    public function show(Book $book) {
-        return $book;
+    /**
+     * Display the specified book.
+     */
+    public function show(Book $book)
+    {
+        return view('books.show', compact('book'));
     }
 
-    // Mettre à jour un livre
-    public function update(Request $request, Book $book) {
-        $book->update($request->all());
-        return $book;
+    /**
+     * Show the form for editing the specified book.
+     */
+    public function edit(Book $book)
+    {
+        return view('admin.books.edit', compact('book'));
     }
 
-    // Supprimer un livre
-    public function destroy(Book $book) {
+    /**
+     * Update the specified book in storage.
+     */
+    public function update(Request $request, Book $book)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'isbn' => 'required|string|unique:books,isbn,' . $book->id,
+            'published_year' => 'nullable|integer|min:1000|max:' . date('Y'),
+            'description' => 'nullable|string',
+            'cover_image' => 'nullable|image|max:2048',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        if ($request->hasFile('cover_image')) {
+            // Delete old cover if exists
+            if ($book->cover_image) {
+                Storage::disk('public')->delete($book->cover_image);
+            }
+            $path = $request->file('cover_image')->store('covers', 'public');
+            $validated['cover_image'] = $path;
+        }
+
+        // Adjust available_quantity if quantity changed
+        $diff = $validated['quantity'] - $book->quantity;
+        $validated['available_quantity'] = max(0, $book->available_quantity + $diff);
+
+        $book->update($validated);
+
+        return redirect()->route('admin.books.index')
+            ->with('success', 'Le livre a été mis à jour avec succès.');
+    }
+
+    /**
+     * Remove the specified book from storage.
+     */
+    public function destroy(Book $book)
+    {
+        if ($book->cover_image) {
+            Storage::disk('public')->delete($book->cover_image);
+        }
+
         $book->delete();
-        return response()->json(['message' => 'Livre supprimé']);
+
+        return redirect()->route('admin.books.index')
+            ->with('success', 'Le livre a été supprimé avec succès.');
     }
 }

@@ -14,7 +14,6 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        $this->authorize('viewAny', Loan::class);
 
         // Statistics
         $totalBooks = Book::count();
@@ -51,7 +50,6 @@ class AdminController extends Controller
      */
     public function books(Request $request)
     {
-        $this->authorize('viewAny', Loan::class);
 
         $query = Book::query();
 
@@ -69,7 +67,6 @@ class AdminController extends Controller
      */
     public function users()
     {
-        $this->authorize('viewAny', Loan::class);
 
         $users = User::where('is_admin', false)
             ->withCount('activeLoans')

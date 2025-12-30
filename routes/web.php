@@ -1,7 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\AdminController;
@@ -15,15 +14,8 @@ use App\Http\Controllers\AdminController;
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Authentication Routes
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
-});
-
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+// Authentication Routes (Breeze)
+require __DIR__.'/auth.php';
 
 // Public Book Routes
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
@@ -37,8 +29,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/loans/{loan}/return', [LoanController::class, 'return'])->name('loans.return');
 });
 
+// Dashboard Redirection
+Route::get('/dashboard', function () {
+    if (auth()->user()->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+    return redirect()->route('home');
+})->middleware(['auth'])->name('dashboard');
+
 // Admin Routes
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
